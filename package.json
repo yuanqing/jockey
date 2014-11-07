@@ -1,0 +1,31 @@
+{
+  "name": "jockey",
+  "version": "0.1.0",
+  "description": "Modelling a playlist that supports shuffle, repeat, and reordering.",
+  "author": "Lim Yuan Qing",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/yuanqing/jockey.git"
+  },
+  "devDependencies": {
+    "istanbul": "^0.3.0",
+    "jasmine-node": "^1.14.5",
+    "jshint": "^2.5.4",
+    "jshint-stylish": "^0.4.0"
+  },
+  "scripts": {
+    "cover": "node_modules/.bin/istanbul cover node_modules/.bin/jasmine-node ./spec -x **/spec/**",
+    "lint": "npm run lint-lib && npm run lint-test",
+    "lint-lib": "node_modules/.bin/jshint --verbose --reporter node_modules/jshint-stylish/stylish.js *.js",
+    "lint-test": "node_modules/.bin/jshint --verbose --reporter node_modules/jshint-stylish/stylish.js ./spec/*.js",
+    "test": "node_modules/.bin/jasmine-node spec --verbose"
+  },
+  "keywords": [
+    "array",
+    "list",
+    "music",
+    "playlist",
+    "stateful"
+  ]
+}
