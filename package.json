@@ -9,13 +9,16 @@
     "url": "git://github.com/yuanqing/jockey.git"
   },
   "devDependencies": {
+    "browserify": "^6.2.0",
     "istanbul": "^0.3.0",
     "jasmine-node": "^1.14.5",
     "jshint": "^2.5.4",
-    "jshint-stylish": "^0.4.0"
+    "jshint-stylish": "^0.4.0",
+    "uglify-js": "^2.4.15"
   },
   "scripts": {
     "cover": "node_modules/.bin/istanbul cover node_modules/.bin/jasmine-node ./spec -x **/spec/**",
+    "dist": "rm -rf dist && mkdir dist && node_modules/.bin/browserify index.js > dist/jockey.js && node_modules/.bin/uglifyjs dist/jockey.js -o dist/jockey.min.js",
     "lint": "npm run lint-lib && npm run lint-test",
     "lint-lib": "node_modules/.bin/jshint --verbose --reporter node_modules/jshint-stylish/stylish.js *.js",
     "lint-test": "node_modules/.bin/jshint --verbose --reporter node_modules/jshint-stylish/stylish.js ./spec/*.js",

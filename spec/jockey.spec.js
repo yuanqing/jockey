@@ -40,6 +40,10 @@ describe('empty', function() {
     expect(playlist.getCurrent()).toEqual(null);
   });
 
+  it('set invalid', function() {
+    expect(playlist.set(0, 'foo')).toEqual(null);
+  });
+
   it('get invalid', function() {
     expect(playlist.get(0)).toEqual(null);
   });
@@ -117,6 +121,55 @@ describe('multiple items', function() {
     expect(playlist.getCurrent()).toEqual(null);
   });
 
+  describe('play', function() {
+
+    beforeEach(function() {
+      expect(playlist.play()).toBe(songs[0]);
+      expect(playlist.getPlayOrder()).toEqual([0, 1, 2]);
+    });
+
+    it('set valid', function() {
+      expect(playlist.set(0, 'qux')).toBe('qux');
+    });
+
+    it('play', function() {
+      expect(playlist.play()).toBe(songs[0]);
+      expect(playlist.isPlaying()).toBe(true);
+    });
+
+    it('pause', function() {
+      expect(playlist.pause()).toBe(songs[0]);
+      expect(playlist.isPaused()).toBe(true);
+    });
+
+    describe('repeat', function() {
+
+      beforeEach(function() {
+        expect(playlist.repeat()).toBe(true);
+        expect(playlist.isRepeating()).toBe(true);
+      });
+
+      it('next, next, next', function() {
+        expect(playlist.next()).toBe(songs[1]);
+        expect(playlist.next()).toBe(songs[2]);
+        expect(playlist.next()).toBe(songs[0]);
+        expect(playlist.isPlaying()).toBe(true);
+      });
+
+      it('play, previous', function() {
+        expect(playlist.previous()).toBe(songs[2]);
+        expect(playlist.isPlaying()).toBe(true);
+      });
+
+    });
+
+    it('shuffle', function() {
+      expect(playlist.shuffle()).toBe(true);
+      expect(playlist.isShuffling()).toBe(true);
+    });
+
+  });
+
   describe('play valid index', function() {
 
     beforeEach(function() {
@@ -158,51 +211,6 @@ describe('multiple items', function() {
       expect(playlist.isPlaying()).toBe(true);
       expect(playlist.next()).toBe(null);
       expect(playlist.isStopped()).toBe(true);
-    });
-
-  });
-
-  describe('play', function() {
-
-    beforeEach(function() {
-      expect(playlist.play()).toBe(songs[0]);
-      expect(playlist.getPlayOrder()).toEqual([0, 1, 2]);
-    });
-
-    it('play', function() {
-      expect(playlist.play()).toBe(songs[0]);
-      expect(playlist.isPlaying()).toBe(true);
-    });
-
-    it('pause', function() {
-      expect(playlist.pause()).toBe(songs[0]);
-      expect(playlist.isPaused()).toBe(true);
-    });
-
-    describe('repeat', function() {
-
-      beforeEach(function() {
-        expect(playlist.repeat()).toBe(true);
-        expect(playlist.isRepeating()).toBe(true);
-      });
-
-      it('next, next, next', function() {
-        expect(playlist.next()).toBe(songs[1]);
-        expect(playlist.next()).toBe(songs[2]);
-        expect(playlist.next()).toBe(songs[0]);
-        expect(playlist.isPlaying()).toBe(true);
-      });
-
-      it('play, previous', function() {
-        expect(playlist.previous()).toBe(songs[2]);
-        expect(playlist.isPlaying()).toBe(true);
-      });
-
-    });
-
-    it('shuffle', function() {
-      expect(playlist.shuffle()).toBe(true);
-      expect(playlist.isShuffling()).toBe(true);
     });
 
   });
