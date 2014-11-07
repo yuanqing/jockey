@@ -20,7 +20,7 @@
     "cover": "node_modules/.bin/istanbul cover node_modules/.bin/jasmine-node ./spec -x **/spec/**",
     "dist": "rm -rf dist && mkdir dist && node_modules/.bin/browserify index.js > dist/jockey.js && node_modules/.bin/uglifyjs dist/jockey.js -o dist/jockey.min.js",
     "lint": "npm run lint-lib && npm run lint-test",
-    "lint-lib": "node_modules/.bin/jshint --verbose --reporter node_modules/jshint-stylish/stylish.js *.js",
+    "lint-lib": "node_modules/.bin/jshint --verbose --reporter node_modules/jshint-stylish/stylish.js index.js",
     "lint-test": "node_modules/.bin/jshint --verbose --reporter node_modules/jshint-stylish/stylish.js ./spec/*.js",
     "test": "node_modules/.bin/jasmine-node spec --verbose"
   },
