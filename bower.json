@@ -1,0 +1,26 @@
+{
+  "name": "jockey",
+  "main": "index.js",
+  "version": "0.1.1",
+  "homepage": "https://github.com/yuanqing/jockey",
+  "authors": [
+    "Lim Yuan Qing <hello@yuanqing.sg>"
+  ],
+  "description": "Modelling a playlist that supports shuffle, repeat, and reordering.",
+  "keywords": [
+    "array",
+    "list",
+    "music",
+    "playlist",
+    "stateful"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "bower_components",
+    "coverage",
+    "node_modules",
+    "spec"
+  ]
+}
