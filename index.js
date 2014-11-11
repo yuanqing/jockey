@@ -281,10 +281,10 @@ var jockey = function(items, cbs, mockShuffle) {
         if (playOrderIndex === oldIndex) {
           playOrderIndex = newIndex;
         } else {
-          if (playOrderIndex > newIndex && playOrderIndex < oldIndex) {
+          if (playOrderIndex >= newIndex && playOrderIndex < oldIndex) {
             playOrderIndex = playOrderIndex + 1;
           }
-          if (playOrderIndex < newIndex && playOrderIndex > oldIndex) {
+          if (playOrderIndex <= newIndex && playOrderIndex > oldIndex) {
             playOrderIndex = playOrderIndex - 1;
           }
         }

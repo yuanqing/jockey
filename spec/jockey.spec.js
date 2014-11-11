@@ -203,6 +203,20 @@ describe('multiple items', function() {
       expect(playlist.isPlaying()).toBe(true);
     });
 
+    it('move item not being played down to currently playing index', function() {
+      expect(playlist.reorder(0, 1)).toBe(songs[0]);
+      expect(playlist.getCurrentIndex()).toBe(0);
+      expect(playlist.getPlayOrder()).toEqual([0, 1, 2]);
+      expect(playlist.isPlaying()).toBe(true);
+    });
+
+    it('move item not being played up to currently playing index', function() {
+      expect(playlist.reorder(2, 1)).toBe(songs[2]);
+      expect(playlist.getCurrentIndex()).toBe(2);
+      expect(playlist.getPlayOrder()).toEqual([0, 1, 2]);
+      expect(playlist.isPlaying()).toBe(true);
+    });
+
     it('move item not being played up', function() {
       expect(playlist.reorder(2, 0)).toBe(songs[2]);
       expect(playlist.getCurrentIndex()).toBe(2);
