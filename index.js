@@ -280,6 +280,13 @@ var jockey = function(items, cbs, mockShuffle) {
         // adjust `playOrderIndex` if not shuffling
         if (playOrderIndex === oldIndex) {
           playOrderIndex = newIndex;
+        } else {
+          if (playOrderIndex > newIndex && playOrderIndex < oldIndex) {
+            playOrderIndex = playOrderIndex + 1;
+          }
+          if (playOrderIndex < newIndex && playOrderIndex > oldIndex) {
+            playOrderIndex = playOrderIndex - 1;
+          }
         }
       }
 
