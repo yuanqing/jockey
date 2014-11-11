@@ -5,6 +5,14 @@ var jockey = require('..');
 
 var songs = ['foo', 'bar', 'baz'];
 
+var noop = function() {};
+
+var callbackNames = [
+  'stopped',
+  'playing',
+  'paused'
+];
+
 var forEach = function(arr, fn) {
   var i;
   var len = arr.length;
@@ -28,7 +36,7 @@ describe('empty', function() {
   var playlist;
 
   beforeEach(function() {
-    playlist = jockey(reverse);
+    playlist = jockey();
     expect(playlist.isStopped()).toBe(true);
     expect(playlist.isPlaying()).toBe(false);
     expect(playlist.isPaused()).toBe(false);
@@ -104,12 +112,14 @@ describe('empty', function() {
 describe('multiple items', function() {
 
   var playlist;
+  var callbacks;
 
   beforeEach(function() {
-    playlist = jockey(reverse);
-    forEach(songs, function(song) {
-      expect(playlist.add(song)).toBe(song);
+    callbacks = {};
+    forEach(callbackNames, function(callbackName) {
+      callbacks[callbackName] = noop;
     });
+    playlist = jockey(songs, callbacks, reverse);
     expect(playlist.isStopped()).toBe(true);
     expect(playlist.isPlaying()).toBe(false);
     expect(playlist.isPaused()).toBe(false);
@@ -166,6 +176,8 @@ describe('multiple items', function() {
     it('shuffle', function() {
       expect(playlist.shuffle()).toBe(true);
       expect(playlist.isShuffling()).toBe(true);
+      expect(playlist.getPlayOrder()).toEqual([0, 2, 1]);
+      expect(playlist.getCurrentIndex()).toBe(0);
     });
 
   });
@@ -210,6 +222,31 @@ describe('multiple items', function() {
       // next
       expect(playlist.isPlaying()).toBe(true);
       expect(playlist.next()).toBe(null);
+      expect(playlist.isStopped()).toBe(true);
+    });
+
+    it('shuffle', function() {
+      expect(playlist.shuffle()).toBe(true);
+      expect(playlist.isShuffling()).toBe(true);
+      expect(playlist.getPlayOrder()).toEqual([1, 2, 0]);
+      expect(playlist.getCurrentIndex()).toBe(1);
+    });
+
+    it('remove, remove currently playing, remove', function() {
+      // remove
+      expect(playlist.remove(0)).toBe(songs[0]);
+      expect(playlist.getPlayOrder()).toEqual([0, 1]);
+      expect(playlist.getCurrentIndex()).toBe(0);
+      expect(playlist.isPlaying()).toBe(true);
+      // remove currently playing
+      expect(playlist.remove(0)).toBe(songs[1]);
+      expect(playlist.getPlayOrder()).toEqual([0]);
+      expect(playlist.getCurrentIndex()).toBe(-1);
+      expect(playlist.isStopped()).toBe(true);
+      // remove
+      expect(playlist.remove(0)).toBe(songs[2]);
+      expect(playlist.getPlayOrder()).toEqual([]);
+      expect(playlist.getCurrentIndex()).toBe(-1);
       expect(playlist.isStopped()).toBe(true);
     });
 

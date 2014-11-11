@@ -1,14 +1,34 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"jockey":[function(require,module,exports){
 'use strict';
 
 var STOPPED = 0;
 var PLAYING = 1;
 var PAUSED = 2;
 
-var jockey = function(mockShuffle) {
+var noop = function() {};
 
-  var items = [];
+var forEach = function(arr, fn) {
+  var i;
+  var len = arr.length;
+  for (i = 0; i < len; ++i) {
+    fn(arr[i], i);
+  }
+};
+
+var jockey = function(items, cbs, mockShuffle) {
+
+  items = items ? items.slice() : [];
+
+  cbs = cbs || {};
+  forEach(['onModelChange', 'onStateChange'], function(name) {
+    cbs[name] = cbs[name] || noop;
+  });
+
   var playOrder = [];
+  forEach(items, function(_, i) {
+    playOrder.push(i);
+  });
+
   var playOrderIndex = -1;
   var state = STOPPED;
   var repeating = false;
@@ -64,23 +84,25 @@ var jockey = function(mockShuffle) {
 
   };
 
-  var _stop = function() {
+  var _stop = function(self) {
     playOrderIndex = -1;
     state = STOPPED;
+    cbs.onStateChange('stopped', self.getCurrent());
     if (shuffling) {
       playOrder = _shuffle(playOrder);
     }
     return null;
   };
 
-  var _play = function(_playOrderIndex) {
+  var _playByPlayOrderIndex = function(self, _playOrderIndex) {
 
     if (_isValidIndex(_playOrderIndex)) {
       playOrderIndex = _playOrderIndex;
       state = PLAYING;
+      cbs.onStateChange('playing', self.getCurrent());
       return items[playOrder[playOrderIndex]];
     }
-    return _stop();
+    return _stop(self);
 
   };
 
@@ -100,43 +122,103 @@ var jockey = function(mockShuffle) {
 
   };
 
+  var _spliceToFront = function(itemIndex) {
+    playOrder.sort();
+    playOrder.splice(itemIndex, 1);
+    playOrder = [itemIndex].concat(_shuffle(playOrder));
+  };
+
+  var _spliceToEnd = function(itemIndex) {
+    playOrder.sort();
+    playOrder.splice(itemIndex, 1);
+    playOrder = _shuffle(playOrder).concat([itemIndex]);
+  };
+
+  var _get = function(index) {
+
+    if (typeof index === 'undefined') {
+      return items;
+    }
+    if (index > -1 && index < items.length) {
+      return items[index];
+    }
+    return null;
+
+  };
+
   return {
 
-    isStopped: function() {
-      return state === STOPPED;
+    add: function(item) {
+
+      items.push(item);
+      playOrder.push(items.length - 1);
+
+      // call `onModelChange` callback
+      cbs.onModelChange(_get());
+
+      if (this.isShuffling()) {
+        // shuffle unplayed items in `playOrder`
+        var unplayedIndices = playOrder.splice(playOrderIndex + 1);
+        playOrder = playOrder.concat(_shuffle(unplayedIndices));
+      }
+
+      return item;
+
     },
-    isPlaying: function() {
-      return state === PLAYING;
-    },
-    isPaused: function() {
-      return state === PAUSED;
-    },
-    isRepeating: function() {
-      return repeating;
-    },
-    isShuffling: function() {
-      return shuffling;
+
+    remove: function(itemIndex) {
+
+      if (!_isValidIndex(itemIndex)) {
+        return null;
+      }
+
+      // remove the item at `itemIndex`
+      var removedItem = items.splice(itemIndex, 1)[0];
+
+      // call `onModelChange` callback
+      cbs.onModelChange(_get());
+
+      // stop if `removedItem` is currently played or paused
+      if (itemIndex === playOrder[playOrderIndex]) {
+        this.stop();
+      }
+
+      // remove `itemIndex` from `playOrder`, and move indices > `itemIndex`
+      // left by 1
+      var newPlayOrder = [];
+      forEach(playOrder, function(playOrderIndex) {
+        if (playOrderIndex !== itemIndex) {
+          if (playOrderIndex > itemIndex) {
+            playOrderIndex = playOrderIndex - 1;
+          }
+          newPlayOrder.push(playOrderIndex);
+        }
+      });
+      playOrder = newPlayOrder;
+      if (playOrderIndex > itemIndex) {
+        playOrderIndex = playOrderIndex - 1;
+      }
+
+      return removedItem;
+
     },
 
     set: function(index, newItem) {
+
       if (index > -1 && index < items.length) {
+
+        // call `onModelChange` callback
+        cbs.onModelChange(_get());
+
         items[index] = newItem;
         return newItem;
       }
-      return null;
-    },
 
-    get: function(index) {
-
-      if (typeof index === 'undefined') {
-        return items;
-      }
-      if (index > -1 && index < items.length) {
-        return items[index];
-      }
       return null;
 
     },
+
+    get: _get,
 
     getCurrentIndex: function() {
 
@@ -159,56 +241,6 @@ var jockey = function(mockShuffle) {
 
     },
 
-    add: function(item) {
-
-      items.push(item);
-      playOrder.push(items.length - 1);
-
-      if (this.isShuffling()) {
-        // shuffle unplayed items in `playOrder`
-        var unplayed = playOrder.splice(playOrderIndex + 1);
-        playOrder = playOrder.concat(_shuffle(unplayed));
-      }
-
-      return item;
-
-    },
-
-    remove: function(itemIndex) {
-
-      if (!_isValidIndex(itemIndex)) {
-        return null;
-      }
-
-      // remove the item at `itemIndex`
-      var removedItem = items.splice(itemIndex, 1)[0];
-
-      // stop if `removedItem` is currently played or paused
-      if (itemIndex === playOrder[playOrderIndex]) {
-        this.stop();
-      }
-
-      // remove `itemIndex` from `playOrder`, and move indices > `itemIndex`
-      // left by 1
-      var newPlayOrder = [];
-      var i;
-      var len = playOrder.length;
-      var j;
-      for (i = 0; i < len; ++i) {
-        j = playOrder[i];
-        if (j !== itemIndex) {
-          if (j > itemIndex) {
-            j = j - 1;
-          }
-          newPlayOrder.push(j);
-        }
-      }
-      playOrder = newPlayOrder;
-
-      return removedItem;
-
-    },
-
     reorder: function(oldIndex, newIndex) {
 
       // exit if no change, or invalid indices
@@ -219,6 +251,9 @@ var jockey = function(mockShuffle) {
       // move item from `oldIndex` to `newIndex`
       var movedItem = items.splice(oldIndex, 1)[0];
       items.splice(newIndex, 0, movedItem);
+
+      // call `onModelChange` callback
+      cbs.onModelChange(this.get());
 
       if (this.isShuffling()) {
         // find left and right ordering of `oldIndex` and `newIndex`
@@ -233,19 +268,15 @@ var jockey = function(mockShuffle) {
           offset = 1;
         }
         // adjust `playOrder` if shuffling
-        var i;
-        var len = playOrder.length;
-        var val;
-        for (i = 0; i < len; ++i) {
-          val = playOrder[i];
-          if (val >= l && val <= r) {
-            if (val === oldIndex) {
+        forEach(playOrder, function(playOrderIndex, i) {
+          if (playOrderIndex >= l && playOrderIndex <= r) {
+            if (playOrderIndex === oldIndex) {
               playOrder[i] = newIndex;
             } else {
-              playOrder[i] = val + offset;
+              playOrder[i] = playOrderIndex + offset;
             }
           }
-        }
+        });
       } else {
         // adjust `playOrderIndex` if not shuffling
         if (playOrderIndex === oldIndex) {
@@ -257,13 +288,31 @@ var jockey = function(mockShuffle) {
 
     },
 
+    isStopped: function() {
+      return state === STOPPED;
+    },
+    isPlaying: function() {
+      return state === PLAYING;
+    },
+    isPaused: function() {
+      return state === PAUSED;
+    },
+    isRepeating: function() {
+      return repeating;
+    },
+    isShuffling: function() {
+      return shuffling;
+    },
+
     stop: function() {
 
-      return _stop();
+      return _stop(this);
 
     },
 
     play: function(itemIndex) {
+
+      var currentItem;
 
       if (typeof itemIndex === 'undefined') {
         if (this.isStopped()) {
@@ -276,27 +325,23 @@ var jockey = function(mockShuffle) {
             playOrderIndex = 0; // playOrder 0 was valid; save it
           }
           state = PLAYING;
-          return this.get(itemIndex);
+          currentItem = this.getCurrent();
+          cbs.onStateChange('playing', currentItem);
+          return currentItem;
         }
       } else {
         if (_isValidIndex(itemIndex)) {
           if (this.isShuffling()) {
             // move `itemIndex` to the front of `playOrder`
-            var len = playOrder.length;
-            var i;
-            for (i = 0; i < len; ++i) {
-              if (playOrder[i] === itemIndex) {
-                playOrder.splice(i, 1);
-                break;
-              }
-            }
-            playOrder = [itemIndex].concat(playOrder);
+            _spliceToFront(itemIndex);
             playOrderIndex = 0;
           } else {
             playOrderIndex = itemIndex;
           }
           state = PLAYING;
-          return this.get(playOrder[playOrderIndex]);
+          currentItem = this.getCurrent();
+          cbs.onStateChange('playing', currentItem);
+          return currentItem;
         }
       }
 
@@ -309,7 +354,9 @@ var jockey = function(mockShuffle) {
 
       if (!this.isStopped()) {
         state = PAUSED;
-        return this.getCurrent();
+        var currentItem = this.getCurrent();
+        cbs.onStateChange('paused', this.getCurrent());
+        return currentItem;
       }
 
       return null;
@@ -339,12 +386,10 @@ var jockey = function(mockShuffle) {
 
       if (this.isRepeating() && playOrderIndex === playOrder.length - 1) {
         var itemIndex = playOrder[playOrderIndex];
-        playOrder.sort();
-        playOrder.splice(itemIndex, 1);
-        playOrder = _shuffle(playOrder).concat([itemIndex]);
+        _spliceToEnd(itemIndex);
       }
 
-      return _play(playOrderIndex);
+      return _playByPlayOrderIndex(this, playOrderIndex);
 
     },
 
@@ -371,12 +416,10 @@ var jockey = function(mockShuffle) {
 
       if (this.isRepeating() && playOrderIndex === 0) {
         var itemIndex = playOrder[playOrderIndex];
-        playOrder.sort();
-        playOrder.splice(itemIndex, 1);
-        playOrder = [itemIndex].concat(_shuffle(playOrder));
+        _spliceToFront(itemIndex);
       }
 
-      return _play(playOrderIndex);
+      return _playByPlayOrderIndex(this, playOrderIndex);
 
     },
 
@@ -398,10 +441,12 @@ var jockey = function(mockShuffle) {
 
       shuffling = true;
       if (this.isStopped()) {
+        // shuffle entire `playOrder`
         playOrder = _shuffle(playOrder);
       } else {
-        playOrder.splice(playOrderIndex, 1);
-        playOrder = [playOrderIndex].concat(_shuffle(playOrder));
+        // move `playOrderIndex` to front
+        _spliceToFront(playOrderIndex);
+        playOrderIndex = 0;
       }
       return true;
 
@@ -413,4 +458,4 @@ var jockey = function(mockShuffle) {
 
 module.exports = exports = jockey;
 
-},{}]},{},[1]);
+},{}]},{},[]);
