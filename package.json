@@ -8,27 +8,21 @@
     "type": "git",
     "url": "git://github.com/yuanqing/jockey.git"
   },
+  "main": "jockey.js",
   "devDependencies": {
-    "browserify": "^6.2.0",
-    "istanbul": "^0.3.0",
-    "jasmine-node": "^1.14.5",
-    "jshint": "^2.5.4",
-    "jshint-stylish": "^0.4.0",
-    "uglify-js": "^2.4.15"
+    "istanbul": "^0.3.14",
+    "jshint": "^2.8.0",
+    "tape": "^4.0.0",
+    "uglify-js": "^2.4.23"
   },
   "scripts": {
-    "cover": "node_modules/.bin/istanbul cover node_modules/.bin/jasmine-node ./spec -x **/spec/**",
-    "dist": "rm -rf dist && mkdir dist && node_modules/.bin/browserify -r ./index.js:jockey > dist/jockey.js && node_modules/.bin/uglifyjs dist/jockey.js -o dist/jockey.min.js",
-    "lint": "npm run lint-lib && npm run lint-test",
-    "lint-lib": "node_modules/.bin/jshint --verbose --reporter node_modules/jshint-stylish/stylish.js index.js",
-    "lint-test": "node_modules/.bin/jshint --verbose --reporter node_modules/jshint-stylish/stylish.js ./spec/*.js",
-    "test": "node_modules/.bin/jasmine-node spec --verbose"
+    "build": "npm run lint && npm test && npm run dist",
+    "lint": "jshint --verbose jockey.js test/*.js",
+    "test": "rm -rf coverage && istanbul cover tape test/*.js",
+    "dist": "rm -f jockey.min.js && uglifyjs jockey.js --compress --mangle --output jockey.min.js"
   },
   "keywords": [
-    "array",
-    "list",
     "music",
-    "playlist",
-    "stateful"
+    "playlist"
   ]
 }
