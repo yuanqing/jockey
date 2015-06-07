@@ -182,28 +182,40 @@ test('get the currently-playing item', function(t) {
   t.equal(j.getCurrent(), 1);
 });
 
-// j.play([i]), j.isPlaying()
+// play([i])
+
+test('throws if playlist is empty', function(t) {
+  t.plan(8);
+  var j = jockey();
+  t.false(j.isPlaying());
+  t.equal(j.getCurrentIndex(), -1);
+  t.throws(function() {
+    j.play();
+  });
+  t.false(j.isPlaying());
+  t.equal(j.getCurrentIndex(), -1);
+  t.throws(function() {
+    j.play(0);
+  });
+  t.false(j.isPlaying());
+  t.equal(j.getCurrentIndex(), -1);
+});
 
 test('throws for invalid `i`', function(t) {
-  t.plan(5);
+  t.plan(8);
   var j = jockey([1, 2, 3]);
   t.false(j.isPlaying());
+  t.equal(j.getCurrentIndex(), -1);
   t.throws(function() {
     j.play(-1);
   });
   t.false(j.isPlaying());
+  t.equal(j.getCurrentIndex(), -1);
   t.throws(function() {
     j.play(3);
   });
   t.false(j.isPlaying());
-});
-
-test('has no effect if playlist is empty', function(t) {
-  t.plan(2);
-  var j = jockey();
-  t.false(j.isPlaying());
-  j.play();
-  t.false(j.isPlaying());
+  t.equal(j.getCurrentIndex(), -1);
 });
 
 test('plays the item at index 0 if no `i` specified', function(t) {
@@ -224,7 +236,7 @@ test('plays the item at index `i`', function(t) {
   j.play(2);
   t.true(j.isPlaying());
   t.equal(j.getCurrentIndex(), 2);
-  j.play(0);
+  j.play();
   t.true(j.isPlaying());
   t.equal(j.getCurrentIndex(), 0);
 });

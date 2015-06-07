@@ -4,12 +4,6 @@
 
   var STOPPED = -1;
 
-  var checkIndex = function(i, len) {
-    if (i < 0 || i >= len) {
-      throw new Error('invalid index: ' + i);
-    }
-  };
-
   var Jockey = function(items) {
     if (!(this instanceof Jockey)) {
       return new Jockey(items);
@@ -35,13 +29,13 @@
     if (item == null) {
       throw new Error('need an item');
     }
-    checkIndex(i, this.items.length + 1);
+    this._c(i, this.items.length + 1);
     this.items.splice(i, 0, item);
   };
 
   // Remove the item at index `i`. Throws for invalid `i`.
   j.remove = function(i) {
-    checkIndex(i, this.items.length);
+    this._c(i);
     this.items.splice(i, 1);
   };
 
@@ -52,7 +46,7 @@
 
   // Get the item at index `i`. Throws for invalid `i`.
   j.get = function(i) {
-    checkIndex(i, this.items.length);
+    this._c(i);
     return this.items[i];
   };
 
@@ -63,7 +57,7 @@
 
   // Returns the currently-playing item if playing, else returns `null`.
   j.getCurrent = function() {
-    return this.i === STOPPED ? null : this.items[this.i];
+    return this.isPlaying() ? this.items[this.i] : null;
   };
 
   // Return `true` if playing.
@@ -74,15 +68,11 @@
   // Play the item at index 0 if no `i` specified. Else plays the item at index
   // `i`, and throws for invalid `i`.
   j.play = function(i) {
-    var len = this.items.length;
-    if (len) {
-      if (i == null) {
-        this.i = 0;
-      } else {
-        checkIndex(i, len);
-        this.i = i;
-      }
+    if (i == null) {
+      i = 0;
     }
+    this._c(i);
+    this.i = i;
   };
 
   // Stop playing.
@@ -119,7 +109,7 @@
   j.next = function() {
     var len = this.items.length;
     var i = this.i;
-    if (i !== STOPPED && len) {
+    if (this.isPlaying() && len) {
       if (i < len - 1) {
         this.i++;
       } else {
@@ -131,23 +121,28 @@
   // Move the item at `oldIndex` to `newIndex`. Throws if either indices
   // are invalid.
   j.reorder = function(oldIndex, newIndex) {
-    var self = this;
-    var len = self.items.length;
-    checkIndex(oldIndex, len);
-    checkIndex(newIndex, len);
-    var item = self.items.splice(oldIndex, 1)[0];
-    self.items.splice(newIndex, 0, item);
-    var i = self.i;
-    if (i !== STOPPED) {
+    this._c(oldIndex);
+    this._c(newIndex);
+    var item = this.items.splice(oldIndex, 1)[0];
+    this.items.splice(newIndex, 0, item);
+    var i = this.i;
+    if (this.isPlaying()) {
       if (i === oldIndex) {
-        self.i = newIndex;
+        this.i = newIndex;
       } else {
         if (oldIndex <= i && newIndex >= i) {
-          self.i--;
+          this.i--;
         } else if (newIndex <= i && oldIndex >= i) {
-          self.i++;
+          this.i++;
         }
       }
+    }
+  };
+
+  // Throws if `i` is an invalid index.
+  j._c = function(i, len) {
+    if (i < 0 || (i >= (len || this.items.length))) {
+      throw new Error('invalid index: ' + i);
     }
   };
 
