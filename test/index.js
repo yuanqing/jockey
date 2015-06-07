@@ -264,13 +264,13 @@ test('stops the playlist if currently playing', function(t) {
   t.equal(j.getCurrentIndex(), -1);
 });
 
-// toggleRepeat(), j.isRepeating()
+// repeat(), j.isRepeating()
 
 test('repeat', function(t) {
   t.plan(5);
   var j = jockey([1, 2, 3]);
   t.false(j.isRepeating());
-  j.toggleRepeat();
+  j.repeat();
   j.play();
   j.next();
   j.next();
@@ -316,7 +316,7 @@ test('stops playing if not repeating and no previous item', function(t) {
 test('wraps around to the last item if repeating', function(t) {
   t.plan(5);
   var j = jockey([1, 2, 3]);
-  j.toggleRepeat();
+  j.repeat();
   t.true(j.isRepeating());
   j.play(0);
   t.true(j.isPlaying());
@@ -361,7 +361,7 @@ test('stops playing if not repeating and no next item', function(t) {
 test('wraps around to the first item if repeating', function(t) {
   t.plan(5);
   var j = jockey([1, 2, 3]);
-  j.toggleRepeat();
+  j.repeat();
   t.true(j.isRepeating());
   j.play(2);
   t.true(j.isPlaying());

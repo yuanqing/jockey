@@ -10,8 +10,8 @@
     }
     this.items = items || [];
     this.i = STOPPED;
-    this.repeat = false;
-    this.shuffle = false;
+    this.repeatFlag = false;
+    this.shuffleFlag = false;
   };
 
   var j = Jockey.prototype;
@@ -68,9 +68,7 @@
   // Play the item at index 0 if no `i` specified. Else plays the item at index
   // `i`, and throws for invalid `i`.
   j.play = function(i) {
-    if (i == null) {
-      i = 0;
-    }
+    i = i || 0;
     this._c(i);
     this.i = i;
   };
@@ -81,13 +79,13 @@
   };
 
   // Toggle the `repeat` flag.
-  j.toggleRepeat = function() {
-    this.repeat = !this.repeat;
+  j.repeat = function() {
+    this.repeatFlag = !this.repeatFlag;
   };
 
   // Returns `true` if repeating.
   j.isRepeating = function() {
-    return this.repeat;
+    return this.repeatFlag;
   };
 
   // Plays the previous item if playing, wrapping to the end of the playlist if
@@ -99,7 +97,7 @@
       if (i > 0) {
         this.i--;
       } else {
-        this.i = this.repeat ? len - 1 : STOPPED;
+        this.i = this.isRepeating() ? len - 1 : STOPPED;
       }
     }
   };
@@ -113,7 +111,7 @@
       if (i < len - 1) {
         this.i++;
       } else {
-        this.i = this.repeat ? 0 : STOPPED;
+        this.i = this.isRepeating() ? 0 : STOPPED;
       }
     }
   };
