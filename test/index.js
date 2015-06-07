@@ -5,18 +5,18 @@ var jockey = require('..');
 
 // jockey([items])
 
-test('constructor is a function', function(t) {
+test('is a function', function(t) {
   t.plan(1);
   t.true(typeof jockey === 'function');
 });
 
-test('constructor can be called without the `new` keyword', function(t) {
+test('can be called without the `new` keyword', function(t) {
   t.plan(1);
   var j = jockey();
   t.true(typeof j === 'object');
 });
 
-test('constructor takes an array of `items`', function(t) {
+test('takes an array of `items`', function(t) {
   t.plan(1);
   var items = [1, 2, 3];
   var j = jockey(items);
@@ -35,57 +35,12 @@ test('throws if no `item`', function(t) {
 });
 
 test('append item to end', function(t) {
-  t.plan(1);
+  t.plan(2);
   var j = jockey();
   j.add(1);
+  t.looseEqual(j.items, [1]);
   j.add(2);
-  j.add(3);
-  t.looseEqual(j.items, [1, 2, 3]);
-});
-
-// insert(item, i)
-
-test('throws if no `item`', function(t) {
-  t.plan(2);
-  var j = jockey([1, 2, 3]);
-  t.throws(function() {
-    j.insert();
-  });
-  t.looseEqual(j.items, [1, 2, 3]);
-});
-
-test('throws for invalid `i`', function(t) {
-  t.plan(4);
-  var j = jockey([1, 2, 3]);
-  t.throws(function() {
-    j.insert('x', -1);
-  });
-  t.looseEqual(j.items, [1, 2, 3]);
-  t.throws(function() {
-    j.insert('x', 4);
-  });
-  t.looseEqual(j.items, [1, 2, 3]);
-});
-
-test('insert to start', function(t) {
-  t.plan(1);
-  var j = jockey([1, 2, 3]);
-  j.insert('x', 0);
-  t.looseEqual(j.items, ['x', 1, 2, 3]);
-});
-
-test('insert to middle', function(t) {
-  t.plan(1);
-  var j = jockey([1, 2, 3]);
-  j.insert('x', 2);
-  t.looseEqual(j.items, [1, 2, 'x', 3]);
-});
-
-test('insert to end', function(t) {
-  t.plan(1);
-  var j = jockey([1, 2, 3]);
-  j.insert('x', 3);
-  t.looseEqual(j.items, [1, 2, 3, 'x']);
+  t.looseEqual(j.items, [1, 2]);
 });
 
 // remove(i)
@@ -130,7 +85,13 @@ test('get the playlist size', function(t) {
   t.equal(j.size(), 3);
 });
 
-// get(i)
+// get([i])
+
+test('returns the items if no `i` specified', function(t) {
+  t.plan(1);
+  var j = jockey([1, 2, 3]);
+  t.looseEqual(j.get(), [1, 2, 3]);
+});
 
 test('throws for invalid `i`', function(t) {
   t.plan(2);
@@ -279,6 +240,16 @@ test('repeat', function(t) {
   j.next();
   t.true(j.isPlaying());
   t.equal(j.getCurrentIndex(), 0);
+});
+
+// repeat(), j.isRepeating()
+
+test('shuffle', function(t) {
+  t.plan(2);
+  var j = jockey([1, 2, 3]);
+  t.false(j.isShuffling());
+  j.shuffle();
+  t.true(j.isShuffling());
 });
 
 // previous()
