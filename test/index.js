@@ -3,7 +3,7 @@
 var test = require('tape');
 var jockey = require('..');
 
-// var j = jockey([items])
+// jockey([items])
 
 test('constructor is a function', function(t) {
   t.plan(1);
@@ -23,7 +23,7 @@ test('constructor takes an array of `items`', function(t) {
   t.equal(j.items, items);
 });
 
-// j.add(item)
+// add(item)
 
 test('throws if no `item`', function(t) {
   t.plan(2);
@@ -43,7 +43,7 @@ test('append item to end', function(t) {
   t.looseEqual(j.items, [1, 2, 3]);
 });
 
-// j.insert(item, i)
+// insert(item, i)
 
 test('throws if no `item`', function(t) {
   t.plan(2);
@@ -88,7 +88,7 @@ test('insert to end', function(t) {
   t.looseEqual(j.items, [1, 2, 3, 'x']);
 });
 
-// j.remove(i)
+// remove(i)
 
 test('remove from start', function(t) {
   t.plan(1);
@@ -122,7 +122,7 @@ test('throws for invalid `i`', function(t) {
   });
 });
 
-// j.size()
+// size()
 
 test('get the playlist size', function(t) {
   t.plan(1);
@@ -130,7 +130,7 @@ test('get the playlist size', function(t) {
   t.equal(j.size(), 3);
 });
 
-// j.get(i)
+// get(i)
 
 test('throws for invalid `i`', function(t) {
   t.plan(2);
@@ -151,7 +151,7 @@ test('get the item at index `i`', function(t) {
   t.equal(j.get(2), 3);
 });
 
-// j.getCurrentIndex()
+// getCurrentIndex()
 
 test('returns -1 if not currently playing', function(t) {
   t.plan(1);
@@ -167,7 +167,7 @@ test('get the index of the currently-playing item', function(t) {
   t.equal(j.getCurrentIndex(), 0);
 });
 
-// j.getCurrent()
+// getCurrent()
 
 test('returns `null` if not currently playing', function(t) {
   t.plan(1);
@@ -241,7 +241,7 @@ test('plays the item at index `i`', function(t) {
   t.equal(j.getCurrentIndex(), 0);
 });
 
-// j.stop()
+// stop()
 
 test('has no effect if not currently playing', function(t) {
   t.plan(2);
@@ -264,7 +264,7 @@ test('stops the playlist if currently playing', function(t) {
   t.equal(j.getCurrentIndex(), -1);
 });
 
-// j.toggleRepeat(), j.isRepeating()
+// toggleRepeat(), j.isRepeating()
 
 test('repeat', function(t) {
   t.plan(5);
@@ -281,7 +281,7 @@ test('repeat', function(t) {
   t.equal(j.getCurrentIndex(), 0);
 });
 
-// j.previous()
+// previous()
 
 test('has no effect if not currently playing', function(t) {
   t.plan(2);
@@ -326,7 +326,7 @@ test('wraps around to the last item if repeating', function(t) {
   t.equal(j.getCurrentIndex(), 2);
 });
 
-// j.next()
+// next()
 
 test('has no effect if not currently playing', function(t) {
   t.plan(2);
@@ -369,4 +369,192 @@ test('wraps around to the first item if repeating', function(t) {
   j.next();
   t.true(j.isPlaying());
   t.equal(j.getCurrentIndex(), 0);
+});
+
+// reorder(oldIndex, newIndex)
+
+test('invalid `oldIndex`', function(t) {
+  t.plan(1);
+  var j = jockey([1, 2, 3]);
+  t.throws(function() {
+    j.reorder(3, 1);
+  });
+});
+
+test('invalid `newIndex`', function(t) {
+  t.plan(1);
+  var j = jockey([1, 2, 3]);
+  t.throws(function() {
+    j.reorder(1, -1);
+  });
+});
+
+test('`oldIndex` == `newIndex`', function(t) {
+  t.test('not playing', function(t) {
+    t.plan(1);
+    var j = jockey([1, 2, 3]);
+    j.reorder(1, 1);
+    t.looseEqual(j.items, [1, 2, 3]);
+  });
+  t.test('current index == `oldIndex` == `newIndex`', function(t) {
+    t.plan(5);
+    var j = jockey([1, 2, 'x', 3, 4]);
+    j.play(2);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 2);
+    j.reorder(2, 2);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 2);
+    t.looseEqual(j.items, [1, 2, 'x', 3, 4]);
+  });
+  t.test('current index < `oldIndex` == `newIndex`', function(t) {
+    t.plan(5);
+    var j = jockey([1, 2, 'x', 3, 4]);
+    j.play(2);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 2);
+    j.reorder(3, 3);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 2);
+    t.looseEqual(j.items, [1, 2, 'x', 3, 4]);
+  });
+  t.test('current index > `oldIndex` == `newIndex`', function(t) {
+    t.plan(5);
+    var j = jockey([1, 2, 'x', 3, 4]);
+    j.play(2);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 2);
+    j.reorder(0, 0);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 2);
+    t.looseEqual(j.items, [1, 2, 'x', 3, 4]);
+  });
+});
+
+test('`oldIndex` < `newIndex`', function(t) {
+  t.test('not playing', function(t) {
+    t.plan(1);
+    var j = jockey([1, 2, 3]);
+    j.reorder(1, 2);
+    t.looseEqual(j.items, [1, 3, 2]);
+  });
+  t.test('current index < `oldIndex` < `newIndex`', function(t) {
+    t.plan(5);
+    var j = jockey(['x', 1, 2, 3, 4]);
+    j.play(0);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 0);
+    j.reorder(2, 4);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 0);
+    t.looseEqual(j.items, ['x', 1, 3, 4, 2]);
+  });
+  t.test('current index == `oldIndex` < `newIndex`', function(t) {
+    t.plan(5);
+    var j = jockey([1, 2, 'x', 3, 4]);
+    j.play(2);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 2);
+    j.reorder(2, 4);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 4);
+    t.looseEqual(j.items, [1, 2, 3, 4, 'x']);
+  });
+  t.test('`oldIndex` < current index < `newIndex`', function(t) {
+    t.plan(5);
+    var j = jockey([1, 2, 'x', 3, 4]);
+    j.play(2);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 2);
+    j.reorder(1, 4);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 1);
+    t.looseEqual(j.items, [1, 'x', 3, 4, 2]);
+  });
+  t.test('`oldIndex` < `newIndex` == current index', function(t) {
+    t.plan(5);
+    var j = jockey([1, 2, 3, 'x', 4]);
+    j.play(3);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 3);
+    j.reorder(2, 3);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 2);
+    t.looseEqual(j.items, [1, 2, 'x', 3, 4]);
+  });
+  t.test('`oldIndex` < `newIndex` < current index', function(t) {
+    t.plan(5);
+    var j = jockey([1, 2, 3, 'x', 4]);
+    j.play(3);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 3);
+    j.reorder(0, 2);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 3);
+    t.looseEqual(j.items, [2, 3, 1, 'x', 4]);
+  });
+});
+
+test('`oldIndex` > `newIndex`', function(t) {
+  t.test('not playing', function(t) {
+    t.plan(1);
+    var j = jockey([1, 2, 3]);
+    j.reorder(1, 0);
+    t.looseEqual(j.items, [2, 1, 3]);
+  });
+  t.test('current index > `oldIndex` > `newIndex`', function(t) {
+    t.plan(5);
+    var j = jockey([1, 2, 3, 'x', 4]);
+    j.play(3);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 3);
+    j.reorder(2, 1);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 3);
+    t.looseEqual(j.items, [1, 3, 2, 'x', 4]);
+  });
+  t.test('current index == `oldIndex` > `newIndex`', function(t) {
+    t.plan(5);
+    var j = jockey([1, 2, 3, 'x', 4]);
+    j.play(3);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 3);
+    j.reorder(3, 1);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 1);
+    t.looseEqual(j.items, [1, 'x', 2, 3, 4]);
+  });
+  t.test('`oldIndex` > current index > `newIndex`', function(t) {
+    t.plan(5);
+    var j = jockey([1, 2, 'x', 3, 4]);
+    j.play(2);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 2);
+    j.reorder(4, 1);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 3);
+    t.looseEqual(j.items, [1, 4, 2, 'x', 3]);
+  });
+  t.test('`oldIndex` > `newIndex` == current index', function(t) {
+    t.plan(5);
+    var j = jockey([1, 'x', 2, 3, 4]);
+    j.play(1);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 1);
+    j.reorder(3, 1);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 2);
+    t.looseEqual(j.items, [1, 3, 'x', 2, 4]);
+  });
+  t.test('`oldIndex` > `newIndex` > current index', function(t) {
+    t.plan(5);
+    var j = jockey(['x', 1, 2, 3, 4]);
+    j.play(0);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 0);
+    j.reorder(4, 1);
+    t.true(j.isPlaying());
+    t.equal(j.getCurrentIndex(), 0);
+    t.looseEqual(j.items, ['x', 4, 1, 2, 3]);
+  });
 });
