@@ -9,6 +9,23 @@
   var NOT_SHUFFLING = false;
 
   //
+  // Swaps `arr[i]` and `arr[j]` in place.
+  //
+  var swap = function(arr, i, j) {
+    var temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+    return arr;
+  };
+
+  //
+  // Generate an integer in the specified range.
+  //
+  var rand = function(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
+
+  //
   // Constructor.
   //
   var Jockey = function(items) {
@@ -171,6 +188,11 @@
   // Stop playing.
   //
   j.stop = function() {
+
+    // Generate a new shuffle if shuffling.
+    if (this.isShuffling()) {
+      this.shuffled = this._s(this.items.slice());
+    }
     this.i = STOPPED;
   };
 
@@ -227,7 +249,7 @@
 
     // Here we are neither shuffling nor playing. So just make a shallow copy
     // of `this.items`, and shuffle it.
-    this.shuffled = this._s(this.items.slice(), 0);
+    this.shuffled = this._s(this.items.slice());
 
   };
 
@@ -246,20 +268,39 @@
 
     // Do nothing if we are not playing, or if the playlist is empty.
     var len = this.items.length;
-    if (this.isPlaying() && len) {
+    if (!this.isPlaying() || !len) {
+      return;
+    }
 
-      // A previous item exists, so just decrement `this.i`.
-      if (this.i > 0) {
-        this.i--;
-      } else {
+    // A previous item exists, so just decrement `this.i`.
+    if (this.i > 0) {
+      this.i--;
+      return;
+    }
 
-        // We are already at the first item. Wraparound if we are repeating,
-        // else stop.
-        this.i = this.isRepeating() ?
-          len - 1 :
-          STOPPED;
+    // We are currently at the first item. Stop if not repeating.
+    if (!this.isRepeating()) {
+      return this.stop();
+    }
+
+    // If shuffling, generate a new shuffle.
+    if (this.isShuffling()) {
+      var currentItem = this.getCurrent();
+      this.shuffled = this._s(this.items.slice());
+
+      // If the currently-playing item was placed at index `len-1`, we need to
+      // swap it with a random item taken from the rest of `this.items`. (This
+      // is because `this.i` will be set to `len-1`, and the previous item must
+      // be different from the currently-playing item!)
+      if (len > 1 && this.shuffled[len-1] === currentItem) {
+        var swapIndex = rand(0, this.items.length-2);
+        swap(this.shuffled, len-1, swapIndex);
       }
     }
+
+    // Since we're repeating, wraparound to the last element.
+    this.i = len - 1;
+
   };
 
   //
@@ -268,24 +309,41 @@
   //
   j.next = function() {
 
-    //
     // Do nothing if we are not playing, or if the playlist is empty.
-    //
     var len = this.items.length;
-    if (this.isPlaying() && len) {
+    if (!this.isPlaying() || !len) {
+      return;
+    }
 
-      // A next item exists, so just increment `this.i`.
-      if (this.i < len - 1) {
-        this.i++;
-      } else {
+    // A next item exists, so just increment `this.i`.
+    if (this.i < len - 1) {
+      this.i++;
+      return;
+    }
 
-        // We are already at the last item. Wraparound if we are repeating,
-        // else stop.
-        this.i = this.isRepeating() ?
-          0 :
-          STOPPED;
+    // We are currently at the last item. Stop if not repeating.
+    if (!this.isRepeating()) {
+      return this.stop();
+    }
+
+    // If shuffling, generate a new shuffle.
+    if (this.isShuffling()) {
+      var currentItem = this.getCurrent();
+      this.shuffled = this._s(this.items.slice());
+
+      // If the currently-playing item was placed at index 0, we need to swap
+      // it with a random item taken from the rest of `this.items`. (This
+      // is because `this.i` will be set to 0, and the next item must be
+      // different from the currently-playing item!)
+      if (len > 1 && this.shuffled[len-1] === currentItem) {
+        var swapIndex = rand(0, this.items.length-2);
+        swap(this.shuffled, len-1, swapIndex);
       }
     }
+
+    // Since we're repeating, wraparound to the first element.
+    this.i = 0;
+
   };
 
   //
@@ -345,9 +403,7 @@
     var i = arr.length - 1;
     while (i > startIndex) {
       var j = Math.max(startIndex, Math.floor(Math.random() * (i + 1)));
-      var temp = arr[i];
-      arr[i] = arr[j];
-      arr[j] = temp;
+      swap(arr, i, j);
       i--;
     }
     return arr;
