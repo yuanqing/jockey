@@ -128,13 +128,10 @@
   //
   j.getCurrentIndex = function() {
     if (this.isPlaying()) {
+      // If shuffling, lookup the index of the currently-playing element
+      // in `this.items`, else just return `this.i`.
       return this.isShuffling() ?
-
-        // If shuffling, lookup the index of the currently-playing element
-        // in `this.items`.
         this.items.indexOf(this.getCurrent()) :
-
-        // Else just return `this.i`.
         this.i;
     }
     return STOPPED;
@@ -145,7 +142,9 @@
   //
   j.getCurrent = function() {
     if (this.isPlaying()) {
-      return this.isShuffling() ? this.shuffled[this.i] : this.items[this.i];
+      return this.isShuffling() ?
+        this.shuffled[this.i] :
+        this.items[this.i];
     }
     return null;
   };
@@ -256,7 +255,9 @@
 
         // We are already at the first item. Wraparound if we are repeating,
         // else stop.
-        this.i = this.isRepeating() ? len - 1 : STOPPED;
+        this.i = this.isRepeating() ?
+          len - 1 :
+          STOPPED;
       }
     }
   };
@@ -280,7 +281,9 @@
 
         // We are already at the last item. Wraparound if we are repeating,
         // else stop.
-        this.i = this.isRepeating() ? 0 : STOPPED;
+        this.i = this.isRepeating() ?
+          0 :
+          STOPPED;
       }
     }
   };
