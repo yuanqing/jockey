@@ -13,7 +13,7 @@
   //
   var Jockey = function(items) {
 
-    // Allow `Jockey` to be called without the `new` keyword
+    // Allow `Jockey` to be called without the `new` keyword.
     if (!(this instanceof Jockey)) {
       return new Jockey(items);
     }
@@ -21,21 +21,22 @@
     // The items in the playlist.
     this.items = items || [];
 
-    // A shallow copy of the items in `this.items`, but shuffled.
+    // If shuffling, this is a merely a shallow copy of the items in
+    // `this.items`, but in a shuffled order.
     this.shuffled = NOT_SHUFFLING;
 
-    // If not playing, `this.i` equals `STOPPED`. Else if shuffling, `this.i`
-    // refers to an item in `this.shuffled`, ie. the currently-playing item is
-    // `this.shuffled[this.i]`. Else if not shuffling, `this.i` refers to an
-    // item in `this.items`, ie. the currently-playing item
-    // is `this.items[this.i]`.
+    // If not playing: `this.i` equals `STOPPED`.
+    // If playing and shuffling, `this.i` refers to an item in `this.shuffled`,
+    // ie. the currently-playing item is `this.shuffled[this.i]`.
+    // If playing and not shuffling, `this.i` refers to an item in
+    // `this.items`, ie. the currently-playing item is `this.items[this.i]`.
     this.i = STOPPED;
 
     // This flag will be `true` if we are repeating the playlist.
     this.repeatFlag = false;
   };
 
-  // Store a reference to the `prototype` to facilitate minification.
+  // Store a reference to the Jockey `prototype` to facilitate minification.
   var j = Jockey.prototype;
 
   //
@@ -85,14 +86,14 @@
     }
 
     // Decrement `this.i` if the removed `item` occurs before the
-    // current-playing item. (Note: If shuffling, `i` refers to an item in
-    // `this.shuffled`. Else `i` simply refers to an item in `this.items`.)
+    // current-playing item. If shuffling, `i` refers to an item in
+    // `this.shuffled`. Else `i` refers to an item in `this.items`.
     if (i < this.i) {
       this.i--;
       return;
     }
 
-    // Stop if the removed `item` is the currently-playing item.
+    // Stop playing if the removed `item` is the currently-playing item.
     if (item == currentItem) {
       this.stop();
     }
@@ -127,14 +128,20 @@
   //
   j.getCurrentIndex = function() {
     if (this.isPlaying()) {
-      return this.isShuffling() ? this.items.indexOf(this.getCurrent()) : this.i;
+      return this.isShuffling() ?
+
+        // If shuffling, lookup the index of the currently-playing element
+        // in `this.items`.
+        this.items.indexOf(this.getCurrent()) :
+
+        // Else just return `this.i`.
+        this.i;
     }
     return STOPPED;
   };
 
   //
-  // If playing, returns the currently-playing item. Else returns `null` if
-  // not playing.
+  // If playing, returns the currently-playing item. Else returns `null`.
   //
   j.getCurrent = function() {
     if (this.isPlaying()) {
@@ -151,18 +158,11 @@
   };
 
   //
-  // If no `i` specified: If shuffling, plays the first item in
+  // If no `i` specified: If shuffling, plays the item at index 0 of
   // `this.shuffled`, else plays the item at index 0 of `this.items`.
   // If `i` specified: Plays the item at index `i` of `this.items`.
   //
   j.play = function(i) {
-    if (i == null) {
-      if (this.isShuffling()) {
-
-      } else {
-
-      }
-    }
     i = i || 0;
     this._c(i);
     this.i = i;
@@ -333,8 +333,8 @@
   };
 
   //
-  // Shuffles a subarray of `arr` (from the specified `startIndex` up to
-  // `arr.length - 1`) in place. Shuffles the entire `arr` if no `startIndex`
+  // Shuffles a subarray of `arr` in place, from the specified `startIndex` up
+  // to `arr.length - 1`. Shuffles the entire `arr` if no `startIndex` was
   // specified. This is based on the Knuth shuffle.
   //
   j._s = function(arr, startIndex) {
