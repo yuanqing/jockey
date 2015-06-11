@@ -43,9 +43,9 @@
     this.shuffled = NOT_SHUFFLING;
 
     // If not playing: `this.i` equals `STOPPED`.
-    // If playing and shuffling, `this.i` refers to an item in `this.shuffled`,
+    // If playing and shuffling: `this.i` refers to an item in `this.shuffled`,
     // ie. the currently-playing item is `this.shuffled[this.i]`.
-    // If playing and not shuffling, `this.i` refers to an item in
+    // If playing and not shuffling: `this.i` refers to an item in
     // `this.items`, ie. the currently-playing item is `this.items[this.i]`.
     this.i = STOPPED;
 
@@ -61,7 +61,7 @@
   //
   j.add = function(item) {
 
-    // Throw if no item.
+    // Throw if no `item`.
     if (item == null) {
       throw new Error('need an item');
     }
@@ -170,7 +170,7 @@
   // Returns `true` if playing.
   //
   j.isPlaying = function() {
-    return this.i != STOPPED;
+    return this.i !== STOPPED;
   };
 
   //
@@ -257,7 +257,7 @@
   // Returns `true` if shuffling.
   //
   j.isShuffling = function() {
-    return this.shuffled != NOT_SHUFFLING;
+    return this.shuffled !== NOT_SHUFFLING;
   };
 
   //
@@ -363,7 +363,7 @@
     if (this.isPlaying() && !this.isShuffling()) {
 
       // The item being moved is the currently-playing item.
-      if (this.i == oldIndex) {
+      if (this.i === oldIndex) {
         this.i = newIndex;
         return;
       }
@@ -410,7 +410,7 @@
   };
 
   /* istanbul ignore else */
-  if (typeof module == 'object') {
+  if (typeof module === 'object') {
     module.exports = Jockey;
   } else {
     root.jockey = Jockey;
