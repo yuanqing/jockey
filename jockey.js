@@ -73,10 +73,9 @@
     if (this.isShuffling()) {
       this.shuffled.push(item);
 
-      // Shuffle the "unplayed" subarray of `this.shuffled`.
-      if (this.isPlaying()) {
-        this._s(this.shuffled, this.i);
-      }
+      // If playing, shuffle the "unplayed" subarray of `this.shuffled`. Else
+      // shuffle the entire `this.shuffled` array.
+      this._s(this.shuffled, this.isPlaying() ? this.i + 1 : 0);
     }
   };
 
@@ -179,9 +178,24 @@
   // If `i` specified: Plays the item at index `i` of `this.items`.
   //
   j.play = function(i) {
-    i = i || 0;
-    this._c(i);
-    this.i = i;
+    this._c(i || 0);
+    if (i == null) {
+      this.i = 0;
+    } else {
+      if (this.isShuffling()) {
+
+        // Swap the item to be played to the start of `this.shuffled`, then
+        // shuffle the rest of the array.
+        this.shuffled = this.items.slice();
+        swap(this.shuffled, 0, i);
+        this._s(this.shuffled, 1);
+        this.i = 0;
+      } else {
+
+        // Not shuffling, so just play the item at the specified index.
+        this.i = i;
+      }
+    }
   };
 
   //
@@ -189,9 +203,9 @@
   //
   j.stop = function() {
 
-    // Generate a new shuffle if shuffling.
+    // Reshuffle `this.shuffled` if we are shuffling.
     if (this.isShuffling()) {
-      this.shuffled = this._s(this.items.slice());
+      this._r();
     }
     this.i = STOPPED;
   };
@@ -214,7 +228,6 @@
   // Toggle shuffling.
   //
   j.shuffle = function() {
-
     if (this.isShuffling()) {
 
       // Get the index of the currently-playing item in `this.items`, and
@@ -226,31 +239,28 @@
 
       // Clean out `this.shuffled`.
       this.shuffled = NOT_SHUFFLING;
-      return;
+    } else {
+      if (this.isPlaying()) {
+
+        // Make a shallow copy of `this.items`, and swap the currently-playing
+        // item (at index `this.i`) to index 0.
+        this.shuffled = this.items.slice();
+        var item = this.shuffled[this.i];
+        this.shuffled[this.i] = this.shuffled[0];
+        this.shuffled[0] = item;
+
+        // Sort `this.shuffled` from index 1 and up.
+        this._s(this.shuffled, 1);
+
+        // Set `this.i` to point to the first item in `this.shuffled`.
+        this.i = 0;
+      } else {
+
+        // Here we are neither shuffling nor playing. So just make a shallow copy
+        // of `this.items`, and shuffle it.
+        this._r();
+      }
     }
-
-    // Here we are not shuffling.
-    if (this.isPlaying()) {
-
-      // Make a shallow copy of `this.items`, and swap the currently-playing
-      // item (at index `this.i`) to index 0.
-      this.shuffled = this.items.slice();
-      var item = this.shuffled[this.i];
-      this.shuffled[this.i] = this.shuffled[0];
-      this.shuffled[0] = item;
-
-      // Sort `this.shuffled` from index 1 and up.
-      this._s(this.shuffled, 1);
-
-      // Set `this.i` to point to the first item in `this.shuffled`.
-      this.i = 0;
-      return;
-    }
-
-    // Here we are neither shuffling nor playing. So just make a shallow copy
-    // of `this.items`, and shuffle it.
-    this.shuffled = this._s(this.items.slice());
-
   };
 
   //
@@ -286,7 +296,7 @@
     // If shuffling, generate a new shuffle.
     if (this.isShuffling()) {
       var currentItem = this.getCurrent();
-      this.shuffled = this._s(this.items.slice());
+      this._r();
 
       // If the currently-playing item was placed at index `len-1`, we need to
       // swap it with a random item taken from the rest of `this.items`. (This
@@ -329,15 +339,15 @@
     // If shuffling, generate a new shuffle.
     if (this.isShuffling()) {
       var currentItem = this.getCurrent();
-      this.shuffled = this._s(this.items.slice());
+      this._r();
 
       // If the currently-playing item was placed at index 0, we need to swap
       // it with a random item taken from the rest of `this.items`. (This
       // is because `this.i` will be set to 0, and the next item must be
       // different from the currently-playing item!)
-      if (len > 1 && this.shuffled[len-1] === currentItem) {
-        var swapIndex = rand(0, this.items.length-2);
-        swap(this.shuffled, len-1, swapIndex);
+      if (len > 1 && this.shuffled[0] === currentItem) {
+        var swapIndex = rand(1, this.items.length-1);
+        swap(this.shuffled, 0, swapIndex);
       }
     }
 
@@ -391,6 +401,14 @@
     if (i < 0 || (i >= (len || this.items.length))) {
       throw new Error('invalid index: ' + i);
     }
+  };
+
+  //
+  // Reshuffle `this.shuffled`.
+  //
+  j._r = function() {
+    this.shuffled = this.items.slice();
+    this._s(this.shuffled, 0);
   };
 
   //
