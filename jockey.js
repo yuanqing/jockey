@@ -18,6 +18,9 @@
     return arr;
   };
 
+  // No-op function.
+  var noop = function() {};
+
   //
   // Generate an integer in the specified range.
   //
@@ -28,15 +31,20 @@
   //
   // Constructor.
   //
-  var Jockey = function(items) {
+  var Jockey = function(items, opts) {
 
     // Allow `Jockey` to be called without the `new` keyword.
     if (!(this instanceof Jockey)) {
-      return new Jockey(items);
+      return new Jockey(items, opts);
     }
 
     // The items in the playlist.
     this.items = items || [];
+
+    // Callbacks
+    opts = opts || {};
+    this.mc = opts.modelChange || noop;
+    this.sc = opts.stateChange || noop;
 
     // If shuffling, this is a merely a shallow copy of the items in
     // `this.items`, but in a shuffled order.
@@ -77,6 +85,9 @@
       // shuffle the entire `this.shuffled` array.
       this._s(this.shuffled, this.isPlaying() ? this.i + 1 : 0);
     }
+
+    // Fire the model change callback.
+    this.mc('add');
   };
 
   //
@@ -101,18 +112,22 @@
       this.shuffled.splice(i, 1);
     }
 
-    // Decrement `this.i` if the removed `item` occurs before the
-    // current-playing item. If shuffling, `i` refers to an item in
-    // `this.shuffled`. Else `i` refers to an item in `this.items`.
     if (i < this.i) {
+
+      // Decrement `this.i` if the removed `item` occurs before the
+      // current-playing item. If shuffling, `i` refers to an item in
+      // `this.shuffled`. Else `i` refers to an item in `this.items`.
       this.i--;
-      return;
+    } else {
+
+      // Stop playing if the removed `item` is the currently-playing item.
+      if (item == currentItem) {
+        this.stop();
+      }
     }
 
-    // Stop playing if the removed `item` is the currently-playing item.
-    if (item == currentItem) {
-      this.stop();
-    }
+    // Fire the model change callback.
+    this.mc('remove');
   };
 
   //
@@ -196,6 +211,9 @@
         this.i = i;
       }
     }
+
+    // Fire the state change callback.
+    this.sc('play');
   };
 
   //
@@ -208,6 +226,9 @@
       this._r();
     }
     this.i = STOPPED;
+
+    // Fire the state change callback.
+    this.sc('stop');
   };
 
   //
@@ -215,6 +236,9 @@
   //
   j.repeat = function() {
     this.repeatFlag = !this.repeatFlag;
+
+    // Fire the state change callback.
+    this.sc('repeat');
   };
 
   //
@@ -261,6 +285,9 @@
         this._r();
       }
     }
+
+    // Fire the state change callback.
+    this.sc('shuffle');
   };
 
   //
@@ -281,36 +308,39 @@
     if (!this.isPlaying() || !len) {
       return;
     }
-
-    // A previous item exists, so just decrement `this.i`.
     if (this.i > 0) {
+
+      // A previous item exists, so just decrement `this.i`.
       this.i--;
-      return;
-    }
+    } else {
 
-    // We are currently at the first item. Stop if not repeating.
-    if (!this.isRepeating()) {
-      return this.stop();
-    }
+      // We are currently at the first item. Stop if not repeating.
+      if (!this.isRepeating()) {
+        this.stop();
+      } else {
 
-    // If shuffling, generate a new shuffle.
-    if (this.isShuffling()) {
-      var currentItem = this.getCurrent();
-      this._r();
+        // If shuffling, generate a new shuffle.
+        if (this.isShuffling()) {
+          var currentItem = this.getCurrent();
+          this._r();
 
-      // If the currently-playing item was placed at index `len-1`, we need to
-      // swap it with a random item taken from the rest of `this.items`. (This
-      // is because `this.i` will be set to `len-1`, and the previous item must
-      // be different from the currently-playing item!)
-      if (len > 1 && this.shuffled[len-1] === currentItem) {
-        var swapIndex = rand(0, this.items.length-2);
-        swap(this.shuffled, len-1, swapIndex);
+          // If the currently-playing item was placed at index `len-1`, we need to
+          // swap it with a random item taken from the rest of `this.items`. (This
+          // is because `this.i` will be set to `len-1`, and the previous item must
+          // be different from the currently-playing item!)
+          if (len > 1 && this.shuffled[len-1] === currentItem) {
+            var swapIndex = rand(0, this.items.length-2);
+            swap(this.shuffled, len-1, swapIndex);
+          }
+        }
+
+        // Since we're repeating, wraparound to the last element.
+        this.i = len - 1;
       }
     }
 
-    // Since we're repeating, wraparound to the last element.
-    this.i = len - 1;
-
+    // Fire the state change callback.
+    this.sc('previous');
   };
 
   //
@@ -325,35 +355,39 @@
       return;
     }
 
-    // A next item exists, so just increment `this.i`.
     if (this.i < len - 1) {
+
+      // A next item exists, so just increment `this.i`.
       this.i++;
-      return;
-    }
+    } else {
 
-    // We are currently at the last item. Stop if not repeating.
-    if (!this.isRepeating()) {
-      return this.stop();
-    }
+      // We are currently at the last item. Stop if not repeating.
+      if (!this.isRepeating()) {
+        this.stop();
+      } else {
 
-    // If shuffling, generate a new shuffle.
-    if (this.isShuffling()) {
-      var currentItem = this.getCurrent();
-      this._r();
+        // If shuffling, generate a new shuffle.
+        if (this.isShuffling()) {
+          var currentItem = this.getCurrent();
+          this._r();
 
-      // If the currently-playing item was placed at index 0, we need to swap
-      // it with a random item taken from the rest of `this.items`. (This
-      // is because `this.i` will be set to 0, and the next item must be
-      // different from the currently-playing item!)
-      if (len > 1 && this.shuffled[0] === currentItem) {
-        var swapIndex = rand(1, this.items.length-1);
-        swap(this.shuffled, 0, swapIndex);
+          // If the currently-playing item was placed at index 0, we need to swap
+          // it with a random item taken from the rest of `this.items`. (This
+          // is because `this.i` will be set to 0, and the next item must be
+          // different from the currently-playing item!)
+          if (len > 1 && this.shuffled[0] === currentItem) {
+            var swapIndex = rand(1, this.items.length-1);
+            swap(this.shuffled, 0, swapIndex);
+          }
+        }
+
+        // Since we're repeating, wraparound to the first element.
+        this.i = 0;
       }
     }
 
-    // Since we're repeating, wraparound to the first element.
-    this.i = 0;
-
+    // Fire the state change callback.
+    this.sc('next');
   };
 
   //
@@ -375,23 +409,25 @@
       // The item being moved is the currently-playing item.
       if (this.i === oldIndex) {
         this.i = newIndex;
-        return;
-      }
-
-      // The item is being moved from after the currently-playing item to
-      // before the currently-playing item.
-      if (oldIndex <= this.i && newIndex >= this.i) {
-        this.i--;
       } else {
 
-        // The item is being moved from before the currently-playing item to
-        // after the currently-playing item.
-        if (oldIndex >= this.i && newIndex <= this.i) {
-          this.i++;
+        // The item is being moved from after the currently-playing item to
+        // before the currently-playing item.
+        if (oldIndex <= this.i && newIndex >= this.i) {
+          this.i--;
+        } else {
+
+          // The item is being moved from before the currently-playing item to
+          // after the currently-playing item.
+          if (oldIndex >= this.i && newIndex <= this.i) {
+            this.i++;
+          }
         }
       }
     }
 
+    // Fire the model change callback.
+    this.mc('reorder');
   };
 
   //
