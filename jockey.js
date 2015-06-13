@@ -133,6 +133,33 @@
   };
 
   //
+  // Set the item at index `i` of `this.items` to the specified `item`.
+  //
+  j.set = function(i, item) {
+
+    // Throw for invalid `i`.
+    this._c(i);
+
+    // Throw if no `item`.
+    if (item == null) {
+      throw new Error('need an item');
+    }
+
+    // Set it in `this.items`.
+    var oldItem = this.items[i];
+    this.items[i] = item;
+
+    // Update `this.shuffled` if we are shuffling.
+    if (this.isShuffling()) {
+      i = this.shuffled.indexOf(oldItem);
+      this.shuffled[i] = item;
+    }
+
+    // Fire the model change callback.
+    this.mc('set', this.items);
+  };
+
+  //
   // Returns the playlist size.
   //
   j.size = function() {
@@ -494,7 +521,7 @@
   };
 
   //
-  // Convenience method that is is called when playing or resuming.
+  // Convenience method that is called when playing or resuming.
   //
   j._p = function() {
     this.pauseFlag = false;
