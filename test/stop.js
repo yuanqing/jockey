@@ -7,7 +7,7 @@ var jockey = require('..');
 // stop()
 //
 
-test('has no effect if not currently playing', function(t) {
+test('has no effect if not currently mounted', function(t) {
   t.plan(4);
   var j = jockey([1, 2, 3]);
   t.equal(j.getCurrentIndex(), -1);
@@ -18,7 +18,7 @@ test('has no effect if not currently playing', function(t) {
   t.false(j.isMounted());
 });
 
-test('if playing, stops', function(t) {
+test('if mounted, stops', function(t) {
   t.plan(4);
   var j = jockey([1, 2, 3]);
   // play
@@ -31,7 +31,7 @@ test('if playing, stops', function(t) {
   t.false(j.isMounted());
 });
 
-test('if playing and shuffling, stops, and reshuffles `this.shuffled`', function(t) {
+test('if mounted and shuffling, stops, and reshuffles `this.shuffled`', function(t) {
   t.plan(12);
   var j = jockey([1, 2, 3]);
   // shuffle

@@ -7,13 +7,13 @@ var jockey = require('..');
 // getCurrentIndex()
 //
 
-test('returns `-1` if not currently playing', function(t) {
+test('returns `-1` if not currently mounted', function(t) {
   t.plan(1);
   var j = jockey([1, 2, 3]);
   t.equal(j.getCurrentIndex(), -1);
 });
 
-test('get the index of the currently-playing item', function(t) {
+test('get the index of the currently-mounted item', function(t) {
   t.plan(2);
   var j = jockey([1, 2, 3]);
   t.equal(j.getCurrentIndex(), -1);
@@ -21,7 +21,7 @@ test('get the index of the currently-playing item', function(t) {
   t.equal(j.getCurrentIndex(), 0);
 });
 
-test('get the index of the currently-playing item when shuffling', function(t) {
+test('get the index of the currently-mounted item when shuffling', function(t) {
   t.plan(4);
   var j = jockey([1, 2, 3]);
   // shuffle

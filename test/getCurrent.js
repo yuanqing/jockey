@@ -7,13 +7,13 @@ var jockey = require('..');
 // getCurrent()
 //
 
-test('returns `null` if not currently playing', function(t) {
+test('returns `null` if not currently mounted', function(t) {
   t.plan(1);
   var j = jockey([1, 2, 3]);
   t.equal(j.getCurrent(), null);
 });
 
-test('get the currently-playing item', function(t) {
+test('get the currently-mounted item', function(t) {
   t.plan(1);
   var j = jockey([1, 2, 3]);
   // play
@@ -21,7 +21,7 @@ test('get the currently-playing item', function(t) {
   t.equal(j.getCurrent(), 1);
 });
 
-test('get the currently-playing item when shuffling', function(t) {
+test('get the currently-mounted item when shuffling', function(t) {
   t.plan(4);
   var j = jockey([1, 2, 3]);
   // shuffle

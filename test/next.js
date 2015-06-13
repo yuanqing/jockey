@@ -7,7 +7,7 @@ var jockey = require('..');
 // next()
 //
 
-test('has no effect if not currently playing', function(t) {
+test('has no effect if not currently mounted', function(t) {
   t.plan(2);
   var j = jockey([1, 2, 3]);
   // next
@@ -146,7 +146,7 @@ test('if shuffling and repeating, reshuffles `this.shuffled` and plays the first
   t.equal(j.getCurrentIndex(), 2);
 });
 
-test('if shuffling and repeating, reshuffles `this.shuffled` and plays the first item in `this.shuffled`, which must be different from the currently-playing item', function(t) {
+test('if shuffling and repeating, reshuffles `this.shuffled` and plays the first item in `this.shuffled`, which must be different from the currently-mounted item', function(t) {
   t.plan(11);
   var j = jockey([1, 2, 3]);
   // repeat
@@ -175,7 +175,7 @@ test('if shuffling and repeating, reshuffles `this.shuffled` and plays the first
   j._s = function(arr, startIndex) {
     t.looseEqual(arr, [1, 2, 3]);
     t.equal(startIndex, 0);
-    arr[0] = 2; // first item is same as the currently-playing item
+    arr[0] = 2; // first item is same as the currently-mounted item
     arr[1] = 3;
     arr[2] = 1;
   };

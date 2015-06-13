@@ -7,7 +7,7 @@ var jockey = require('..');
 // shuffle()
 //
 
-test('shuffle while not playing', function(t) {
+test('shuffle while not mounted', function(t) {
   t.plan(3);
   var j = jockey([1, 2, 3]);
   // shuffle
@@ -22,7 +22,7 @@ test('shuffle while not playing', function(t) {
   t.looseEqual(j.shuffled, [3, 1, 2]);
 });
 
-test('shuffle while playing', function(t) {
+test('shuffle while mounted', function(t) {
   t.plan(5);
   var j = jockey([1, 2, 3]);
   // play
@@ -41,7 +41,7 @@ test('shuffle while playing', function(t) {
   t.looseEqual(j.getCurrentIndex(), 1);
 });
 
-test('turns off shuffling while not playing', function(t) {
+test('turns off shuffling while not mounted', function(t) {
   t.plan(6);
   var j = jockey([1, 2, 3]);
   // shuffle
@@ -61,7 +61,7 @@ test('turns off shuffling while not playing', function(t) {
   t.looseEqual(j.getCurrentIndex(), -1);
 });
 
-test('turns off shuffling while playing', function(t) {
+test('turns off shuffling while mounted', function(t) {
   t.plan(7);
   var j = jockey([1, 2, 3]);
   // play
