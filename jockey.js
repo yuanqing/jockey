@@ -211,24 +211,31 @@
   };
 
   //
+  // Returns `true` if the playlist is stopped.
+  //
+  j.isStopped = function() {
+    return this.i === STOPPED;
+  };
+
+  //
   // Returns `true` if an item is mounted ie. not stopped.
   //
   j.isMounted = function() {
-    return this.i !== STOPPED;
+    return !this.isStopped();
   };
 
   //
   // Returns `true` if the playlist is playing.
   //
   j.isPlaying = function() {
-    return this.isMounted() && !this.pauseFlag;
+    return !this.isStopped() && !this.pauseFlag;
   };
 
   //
   // Returns `true` is the playlist is paused.
   //
   j.isPaused = function() {
-    return this.isMounted() && this.pauseFlag;
+    return !this.isStopped() && this.pauseFlag;
   };
 
   //

@@ -8,27 +8,31 @@ var jockey = require('..');
 //
 
 test('has no effect if not currently mounted', function(t) {
-  t.plan(4);
+  t.plan(6);
   var j = jockey([1, 2, 3]);
   t.equal(j.getCurrentIndex(), -1);
   t.false(j.isMounted());
+  t.true(j.isStopped());
   // stop
   j.stop();
   t.equal(j.getCurrentIndex(), -1);
   t.false(j.isMounted());
+  t.true(j.isStopped());
 });
 
 test('if mounted, stops', function(t) {
-  t.plan(4);
+  t.plan(6);
   var j = jockey([1, 2, 3]);
   // play
   j.play();
   t.equal(j.getCurrentIndex(), 0);
   t.true(j.isMounted());
+  t.false(j.isStopped());
   // stop
   j.stop();
   t.equal(j.getCurrentIndex(), -1);
   t.false(j.isMounted());
+  t.true(j.isStopped());
 });
 
 test('if mounted and shuffling, stops, and reshuffles `this.shuffled`', function(t) {
