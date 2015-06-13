@@ -129,7 +129,7 @@ test('remove while playing and shuffling, `i` == current index', function(t) {
   t.looseEqual(j.items, [1, 3]);
   t.looseEqual(j.shuffled, [3, 1]);
   t.equal(j.getCurrentIndex(), -1);
-  t.false(j.isPlaying());
+  t.false(j.isMounted());
 });
 
 test('remove while playing and shuffling, `i` > current index', function(t) {

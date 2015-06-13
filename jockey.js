@@ -59,6 +59,9 @@
 
     // This flag will be `true` if we are repeating the playlist.
     this.repeatFlag = false;
+
+    // This flag will be `true` if the playlist is paused.
+    this.pauseFlag = false;
   };
 
   // Store a reference to the Jockey `prototype` to facilitate minification.
@@ -83,7 +86,7 @@
 
       // If playing, shuffle the "unplayed" subarray of `this.shuffled`. Else
       // shuffle the entire `this.shuffled` array.
-      this._s(this.shuffled, this.isPlaying() ? this.i + 1 : 0);
+      this._s(this.shuffled, this.isMounted() ? this.i + 1 : 0);
     }
 
     // Fire the model change callback.
@@ -111,7 +114,6 @@
       i = this.shuffled.indexOf(item);
       this.shuffled.splice(i, 1);
     }
-
     if (i < this.i) {
 
       // Decrement `this.i` if the removed `item` occurs before the
@@ -158,7 +160,8 @@
   // `this.items`. Else returns `STOPPED`.
   //
   j.getCurrentIndex = function() {
-    if (this.isPlaying()) {
+    if (this.isMounted()) {
+
       // If shuffling, lookup the index of the currently-playing element
       // in `this.items`, else just return `this.i`.
       return this.isShuffling() ?
@@ -172,7 +175,7 @@
   // If playing, returns the currently-playing item. Else returns `null`.
   //
   j.getCurrent = function() {
-    if (this.isPlaying()) {
+    if (this.isMounted()) {
       return this.isShuffling() ?
         this.shuffled[this.i] :
         this.items[this.i];
@@ -181,9 +184,9 @@
   };
 
   //
-  // Returns `true` if playing.
+  // Returns `true` if an item is mounted ie. playing or paused.
   //
-  j.isPlaying = function() {
+  j.isMounted = function() {
     return this.i !== STOPPED;
   };
 
@@ -195,7 +198,23 @@
   j.play = function(i) {
     this._c(i || 0);
     if (i == null) {
-      this.i = 0;
+      if (this.isPaused()) {
+
+        // Resume if paused.
+        this.pauseFlag = false;
+        this.sc('resume', this.getCurrent());
+        return;
+      } else if (this.isPlaying()) {
+
+        // Pause if playing.
+        this.pauseFlag = true;
+        this.sc('pause', this.getCurrent());
+        return;
+      } else {
+
+        // Otherwise play the first item.
+        this.i = 0;
+      }
     } else {
       if (this.isShuffling()) {
 
@@ -213,7 +232,21 @@
     }
 
     // Fire the state change callback.
-    this.sc('play');
+    this.sc('play', this.getCurrent());
+  };
+
+  //
+  // Returns `true` if the playlist is playing.
+  //
+  j.isPlaying = function() {
+    return this.isMounted() && !this.pauseFlag;
+  };
+
+  //
+  // Returns `true` is the playlist is paused.
+  //
+  j.isPaused = function() {
+    return this.isMounted() && this.pauseFlag;
   };
 
   //
@@ -257,14 +290,14 @@
       // Get the index of the currently-playing item in `this.items`, and
       // update `this.i` accordingly. Now, because we are no longer shuffling,
       // `this.i` refers to an index in `this.items`.
-      if (this.isPlaying()) {
+      if (this.isMounted()) {
         this.i = this.getCurrentIndex();
       }
 
       // Clean out `this.shuffled`.
       this.shuffled = NOT_SHUFFLING;
     } else {
-      if (this.isPlaying()) {
+      if (this.isMounted()) {
 
         // Make a shallow copy of `this.items`, and swap the currently-playing
         // item (at index `this.i`) to index 0.
@@ -305,13 +338,14 @@
 
     // Do nothing if we are not playing, or if the playlist is empty.
     var len = this.items.length;
-    if (!this.isPlaying() || !len) {
+    if (!this.isMounted() || !len) {
       return;
     }
     if (this.i > 0) {
 
       // A previous item exists, so just decrement `this.i`.
       this.i--;
+      this.sc('play', this.getCurrent());
     } else {
 
       // We are currently at the first item. Stop if not repeating.
@@ -336,11 +370,9 @@
 
         // Since we're repeating, wraparound to the last element.
         this.i = len - 1;
+        this.sc('play', this.getCurrent());
       }
     }
-
-    // Fire the state change callback.
-    this.sc('previous');
   };
 
   //
@@ -351,14 +383,14 @@
 
     // Do nothing if we are not playing, or if the playlist is empty.
     var len = this.items.length;
-    if (!this.isPlaying() || !len) {
+    if (!this.isMounted() || !len) {
       return;
     }
-
     if (this.i < len - 1) {
 
       // A next item exists, so just increment `this.i`.
       this.i++;
+      this.sc('play', this.getCurrent());
     } else {
 
       // We are currently at the last item. Stop if not repeating.
@@ -383,11 +415,9 @@
 
         // Since we're repeating, wraparound to the first element.
         this.i = 0;
+        this.sc('play', this.getCurrent());
       }
     }
-
-    // Fire the state change callback.
-    this.sc('next');
   };
 
   //
@@ -404,7 +434,7 @@
     this.items.splice(newIndex, 0, item);
 
     // We do not need to adjust `this.i` if we are shuffling.
-    if (this.isPlaying() && !this.isShuffling()) {
+    if (this.isMounted() && !this.isShuffling()) {
 
       // The item being moved is the currently-playing item.
       if (this.i === oldIndex) {

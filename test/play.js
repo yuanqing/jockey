@@ -11,54 +11,56 @@ test('throws if playlist is empty', function(t) {
   t.plan(8);
   var j = jockey();
   t.equal(j.getCurrentIndex(), -1);
-  t.false(j.isPlaying());
+  t.false(j.isMounted());
   t.throws(function() {
     j.play();
   });
   t.equal(j.getCurrentIndex(), -1);
-  t.false(j.isPlaying());
+  t.false(j.isMounted());
   t.throws(function() {
     j.play(0);
   });
   t.equal(j.getCurrentIndex(), -1);
-  t.false(j.isPlaying());
+  t.false(j.isMounted());
 });
 
 test('throws for invalid `i`', function(t) {
   t.plan(8);
   var j = jockey([1, 2, 3]);
   t.equal(j.getCurrentIndex(), -1);
-  t.false(j.isPlaying());
+  t.false(j.isMounted());
   t.throws(function() {
     j.play(-1);
   });
   t.equal(j.getCurrentIndex(), -1);
-  t.false(j.isPlaying());
+  t.false(j.isMounted());
   t.throws(function() {
     j.play(3);
   });
   t.equal(j.getCurrentIndex(), -1);
-  t.false(j.isPlaying());
+  t.false(j.isMounted());
 });
 
 test('plays the item at index 0 if no `i` specified', function(t) {
-  t.plan(2);
+  t.plan(3);
   var j = jockey([1, 2, 3]);
   j.play();
   t.equal(j.getCurrentIndex(), 0);
+  t.true(j.isMounted());
   t.true(j.isPlaying());
 });
 
 test('plays the item at index `i`', function(t) {
-  t.plan(2);
+  t.plan(3);
   var j = jockey([1, 2, 3]);
   j.play(2);
   t.equal(j.getCurrentIndex(), 2);
+  t.true(j.isMounted());
   t.true(j.isPlaying());
 });
 
 test('if shuffling and no `i` specified, plays the item at index 0 of `this.shuffled`', function(t) {
-  t.plan(5);
+  t.plan(6);
   var j = jockey([1, 2, 3]);
   // shuffle
   j._s = function(arr, startIndex) {
@@ -73,11 +75,12 @@ test('if shuffling and no `i` specified, plays the item at index 0 of `this.shuf
   // play
   j.play();
   t.equal(j.getCurrentIndex(), 1);
+  t.true(j.isMounted());
   t.true(j.isPlaying());
 });
 
 test('if shuffling, plays the item at index `i` of `this.item` and reshuffles the "unplayed" subarray of `this.shuffled`', function(t) {
-  t.plan(8);
+  t.plan(9);
   var j = jockey([1, 2, 3]);
   // shuffle
   j._s = function(arr, startIndex) {
@@ -99,6 +102,38 @@ test('if shuffling, plays the item at index `i` of `this.item` and reshuffles th
   };
   j.play(1);
   t.equal(j.getCurrentIndex(), 1);
+  t.true(j.isMounted());
   t.true(j.isPlaying());
   t.looseEqual(j.shuffled, [2, 3, 1]);
+});
+
+test('if no `i`, pauses if currently playing', function(t) {
+  t.plan(8);
+  var j = jockey([1, 2, 3]);
+  j.play();
+  t.equal(j.getCurrentIndex(), 0);
+  t.true(j.isMounted());
+  t.true(j.isPlaying());
+  t.false(j.isPaused());
+  j.play();
+  t.equal(j.getCurrentIndex(), 0);
+  t.true(j.isMounted());
+  t.false(j.isPlaying());
+  t.true(j.isPaused());
+});
+
+test('if no `i`, resumes if currently paused', function(t) {
+  t.plan(8);
+  var j = jockey([1, 2, 3]);
+  j.play();
+  j.play();
+  t.equal(j.getCurrentIndex(), 0);
+  t.true(j.isMounted());
+  t.false(j.isPlaying());
+  t.true(j.isPaused());
+  j.play();
+  t.equal(j.getCurrentIndex(), 0);
+  t.true(j.isMounted());
+  t.true(j.isPlaying());
+  t.false(j.isPaused());
 });
