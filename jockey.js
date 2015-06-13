@@ -8,6 +8,9 @@
   // Sentinel to indicate that shuffling is turned off.
   var NOT_SHUFFLING = false;
 
+  // No-op function.
+  var noop = function() {};
+
   //
   // Swaps `arr[i]` and `arr[j]` in place.
   //
@@ -17,9 +20,6 @@
     arr[j] = temp;
     return arr;
   };
-
-  // No-op function.
-  var noop = function() {};
 
   //
   // Generate an integer in the specified range.
@@ -184,10 +184,24 @@
   };
 
   //
-  // Returns `true` if an item is mounted ie. playing or paused.
+  // Returns `true` if an item is mounted ie. not stopped.
   //
   j.isMounted = function() {
     return this.i !== STOPPED;
+  };
+
+  //
+  // Returns `true` if the playlist is playing.
+  //
+  j.isPlaying = function() {
+    return this.isMounted() && !this.pauseFlag;
+  };
+
+  //
+  // Returns `true` is the playlist is paused.
+  //
+  j.isPaused = function() {
+    return this.isMounted() && this.pauseFlag;
   };
 
   //
@@ -236,20 +250,6 @@
   };
 
   //
-  // Returns `true` if the playlist is playing.
-  //
-  j.isPlaying = function() {
-    return this.isMounted() && !this.pauseFlag;
-  };
-
-  //
-  // Returns `true` is the playlist is paused.
-  //
-  j.isPaused = function() {
-    return this.isMounted() && this.pauseFlag;
-  };
-
-  //
   // Stop playing.
   //
   j.stop = function() {
@@ -265,6 +265,13 @@
   };
 
   //
+  // Returns `true` if repeating.
+  //
+  j.isRepeating = function() {
+    return this.repeatFlag;
+  };
+
+  //
   // Toggle the `repeatFlag`.
   //
   j.repeat = function() {
@@ -275,10 +282,10 @@
   };
 
   //
-  // Returns `true` if repeating.
+  // Returns `true` if shuffling.
   //
-  j.isRepeating = function() {
-    return this.repeatFlag;
+  j.isShuffling = function() {
+    return this.shuffled !== NOT_SHUFFLING;
   };
 
   //
@@ -321,13 +328,6 @@
 
     // Fire the state change callback.
     this.sc('shuffle');
-  };
-
-  //
-  // Returns `true` if shuffling.
-  //
-  j.isShuffling = function() {
-    return this.shuffled !== NOT_SHUFFLING;
   };
 
   //
@@ -494,7 +494,7 @@
   };
 
   //
-  // This is called when playing.
+  // Convenience method that is is called when playing or resuming.
   //
   j._p = function() {
     this.pauseFlag = false;
