@@ -41,7 +41,7 @@
     // The items in the playlist.
     this.items = items || [];
 
-    // Callbacks
+    // Callbacks.
     opts = opts || {};
     this.mc = opts.modelChange || noop;
     this.sc = opts.stateChange || noop;
@@ -90,7 +90,7 @@
     }
 
     // Fire the model change callback.
-    this.mc('add');
+    this.mc('add', this.items);
   };
 
   //
@@ -129,7 +129,7 @@
     }
 
     // Fire the model change callback.
-    this.mc('remove');
+    this.mc('remove', this.items);
   };
 
   //
@@ -345,7 +345,7 @@
 
       // A previous item exists, so just decrement `this.i`.
       this.i--;
-      this.sc('play', this.getCurrent());
+      this._p();
     } else {
 
       // We are currently at the first item. Stop if not repeating.
@@ -370,7 +370,7 @@
 
         // Since we're repeating, wraparound to the last element.
         this.i = len - 1;
-        this.sc('play', this.getCurrent());
+        this._p();
       }
     }
   };
@@ -390,7 +390,7 @@
 
       // A next item exists, so just increment `this.i`.
       this.i++;
-      this.sc('play', this.getCurrent());
+      this._p();
     } else {
 
       // We are currently at the last item. Stop if not repeating.
@@ -415,7 +415,7 @@
 
         // Since we're repeating, wraparound to the first element.
         this.i = 0;
-        this.sc('play', this.getCurrent());
+        this._p();
       }
     }
   };
@@ -457,7 +457,7 @@
     }
 
     // Fire the model change callback.
-    this.mc('reorder');
+    this.mc('reorder', this.items);
   };
 
   //
@@ -491,6 +491,14 @@
       i--;
     }
     return arr;
+  };
+
+  //
+  // This is called when playing.
+  //
+  j._p = function() {
+    this.pauseFlag = false;
+    this.sc('play', this.getCurrent());
   };
 
   /* istanbul ignore else */
